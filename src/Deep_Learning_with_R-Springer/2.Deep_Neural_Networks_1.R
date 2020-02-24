@@ -52,7 +52,7 @@ derivative_relu <- function(dA, cache) {
 derivative_tanh <- function(dA, cache) {
   Z = cache
   a = sinh(Z)/cosh(Z)
-  dZ = dA * (1 - aˆ2)
+  dZ = dA * (1 - a^2)
   
   return(dZ)
 }
@@ -79,8 +79,9 @@ initialize_params <- function(layers_dims, initialization){
   layerParams <- list()
   for(layer in 2:length(layers_dims)){
     
-    if(initialization == "zero"){
+    if(initialization == 'zero'){
       n = 0 * rnorm(layers_dims[layer] * layers_dims[layer - 1])
+      
       layerParams[[paste('W', layer - 1, sep = "")]] =
         matrix(n,
                nrow = layers_dims[layer],
@@ -90,22 +91,24 @@ initialize_params <- function(layers_dims, initialization){
                nrow = layers_dims[layer],
                ncol = 1)
     }
-    
-    else if(initialization == "random"){
+    else if(initialization == 'random'){
       n = rnorm(layers_dims[layer] * layers_dims[layer - 1],
                 mean = 0,
                 sd = 1) * 0.01
-      layerParams[[paste("W", layer - 1, sep = "")]] =
+      
+      layerParams[[paste('W', layer - 1, sep = "")]] =
         matrix(n,
                nrow = layers_dims[layer],
                ncol = layers_dims[layer - 1])
       layerParams[[paste('b', layer - 1, sep = "")]] =
-        matrix
-      
+        matrix(rep(0, layers_dims[layer]),
+               nrow = layers_dims[layer],
+               ncol = 1)
     }
     else if(initialization == 'He'){
       n = rnorm(layers_dims[layer] * layers_dims[layer - 1], mean = 0, sd = 1) *
         sqrt(2/layers_dims[layer - 1])
+      
       layerParams[[paste('W',layer - 1, sep = "")]] =
         matrix(n,
                nrow = layers_dims[layer],
@@ -114,11 +117,11 @@ initialize_params <- function(layers_dims, initialization){
         matrix(rep(0, layers_dims[layer]),
                nrow = layers_dims[layer],
                ncol = 1)
-      
     }
     else if(initialization == 'Xavier'){
       n = rnorm(layers_dims[layer] * layers_dims[layer - 1], mean = 0, sd = 1) *
         sqrt(1 / layers_dims[layer - 1])
+      
       layerParams[[paste('W',layer - 1, sep = "")]] =
         matrix(n,
                nrow = layers_dims[layer],
@@ -143,19 +146,15 @@ f_prop_helper <- function(A_prev, W, b, hidden_layer_act){
   if(hidden_layer_act == "sigmoid"){
     act_values = sigmoid(Z)
   }
-  
   else if (hidden_layer_act == "relu"){
     act_values = relu(Z)
   }
-  
   else if(hidden_layer_act == 'tanh'){
     act_values = tanh(Z)
   }
-  
   else if(hidden_layer_act == 'softmax'){
     act_values = softmax(Z)
   }
-  
   cache <- list("forward_cache" = forward_cache,
                 "activation_cache" = act_values[['Z']])
   
@@ -163,7 +162,8 @@ f_prop_helper <- function(A_prev, W, b, hidden_layer_act){
 }
 
 # Forward propagation
-forward_prop <- function(X, parameters, hidden_layer_act, output_layer_act){
+forward_prop <- function(X, parameters, hidden_layer_act, output_layer_act) {
+  
   caches <- list()
   A <- X
   L <- length(parameters)/2
@@ -177,7 +177,6 @@ forward_prop <- function(X, parameters, hidden_layer_act, output_layer_act){
     A <- actForward[["A"]]
     caches[[l]] <- actForward
   }
-  
   W <- parameters[[paste("W", L, sep = "")]]
   b <- parameters[[paste("b", L, sep = "")]]
   
@@ -303,11 +302,11 @@ update_params <- function(parameters, gradients, learning_rate) {
   L = length(parameters)/2
   for (l in 1:L) {
     parameters[[paste("W", l, sep = "")]] = parameters[[paste("W",
-                                                              l, sep = "")]] - learning_rate * gradients[[paste("dW",
-                                                                                                                l, sep = "")]]
+        l, sep = "")]] - learning_rate * gradients[[paste("dW",
+        l, sep = "")]]
     parameters[[paste("b", l, sep = "")]] = parameters[[paste("b",
-                                                              l, sep = "")]] - learning_rate * gradients[[paste("db",
-                                                                                                                l, sep = "")]]
+        l, sep = "")]] - learning_rate * gradients[[paste("db",
+        l, sep = "")]]
   }
   
   return(parameters)
@@ -321,6 +320,7 @@ predict_model <- function(parameters, X, hidden_layer_act, output_layer_act){
                          parameters,
                          hidden_layer_act,
                          output_layer_act)[['AL']]
+  
   if(output_layer_act == 'softmax') {
     pred <- apply(scores, 1, which.max)
   }
@@ -358,36 +358,29 @@ n_layer_model <- function(X,
                       parameters,
                       hidden_layer_act,
                       output_layer_act)[['AL']]
-    
     caches = forward_prop(X,
                           parameters,
                           hidden_layer_act,
                           output_layer_act)[['caches']]
-    
     cost <- compute_cost(AL,
                          X,
                          Y,
                          num_classes,
                          output_layer_act)
-    
     gradients = back_prop(AL,
                           Y,
                           caches,
                           hidden_layer_act,
                           output_layer_act,
                           num_classes)
-    
     parameters = update_params(parameters,
                                gradients,
                                learning_rate)
-    
     costs <- c(costs, cost)
-    
     if(print_cost == T & i %% 1000 == 0){
       cat(sprintf("Cost after iteration %d = %05f\n", i, cost))
     }
   }
-  
   if(output_layer_act != 'softmax'){
     pred_train <- predict_model(parameters,
                                 X,

@@ -105,3 +105,67 @@ three_layer_model = n_layer_model(trainx,
                                   num_iter = 1500,
                                   initialization = "random",
                                   print_cost = T)
+
+
+layers_dims = c(nrow(trainx), 50, 20, 7, 2)
+
+four_layer_model = n_layer_model(trainx,
+                                 trainy,
+                                 testx,
+                                 testy,
+                                 layers_dims,
+                                 hidden_layer_act = c('relu', 'relu', 'tanh'),
+                                 output_layer_act = 'softmax',
+                                 learning_rate = 0.15,
+                                 num_iter = 1500,
+                                 initialization = "random",
+                                 print_cost = T)
+
+# Compute probabilities
+compute_Proba <- function(parameters,
+                          test_X,
+                          hidden_layer_act,
+                          output_layer_act){
+  
+  score <- forward_prop(test_X,
+                        parameters,
+                        hidden_layer_act,
+                        output_layer_act)[['AL']]
+  Probs <- list(round(score * 100, 2))
+  return (Probs)
+}
+
+Prob <- compute_Proba(two_layer_model$parameters,
+                      testx,
+                      hidden_layer_act = c('relu', 'relu'),
+                      output_layer_act = 'sigmoid')
+
+labels = ifelse(testy == 1, "dog", "cat")
+
+predicted <- ifelse(
+  predict_model(two_layer_model$parameters,
+                testx,
+                hidden_layer_act = c('relu', 'relu'),
+                output_layer_act = 'sigmoid') == 0, 'cat', 'dog')
+
+error <- ifelse(predicted == labels, 'No', 'Yes')
+
+index <- c(1:length(labels))
+
+Probs <- as.vector(unlist(Prob[index]))
+
+par(mfrow = c(5, 10), mar = rep(0, 4))
+
+for(i in 1:length(index)){
+  image(t(apply(matrix(as.matrix(testx[, index[i]]),
+                       c(64, 64, 3),
+                       byrow = TRUE), 1, rev)),
+        method = 'raster',
+        col = gray.colors(12),
+        axes = F)
+  legend("topright", legend = predicted[i],
+         text.col = ifelse(error[i] == 'Yes', 2, 4),
+         bty = "n",
+         text.font = 1.5)
+  legend("bottomright", legend = Probs[i], bty = "n", col = "white")
+}

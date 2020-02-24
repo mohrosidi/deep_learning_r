@@ -3,7 +3,7 @@
 # Import package and function
 library(EBImage)
 library(pbapply)
-library(tidyverse)
+library(magrittr)
 library(keras)
 
 # Define path for the data
@@ -91,5 +91,23 @@ model %>%
     metrics = c('accuracy')
   )
 summary(model)
+
+model %>% fit(t(trainx), trainy, epochs = 50, batch_size = 32,
+              validation_split = 0.2)
+
+history <- model %>% fit(t(trainx), trainy, epochs = 50, batch_size = 32,
+                         validation_split = 0.2)
+
+model %>% evaluate(t(trainx), trainy)
+
+keras_pred_train <- model %>% predict_classes(t(trainx))
+table(Predicted = keras_pred_train, Actual = trainy)
+
+prob <- model %>% predict_proba(t(trainx))
+model %>% evaluate(t(testx), (testy))
+
+# keras evaluation on the test data set
+keras_pred_test <- model %>% predict_classes(t(testx))
+table(Predicted = keras_pred_test, Actual = testy)
 
 
